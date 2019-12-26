@@ -1,9 +1,11 @@
-package model;
+package model.card;
 
 
 import constants.Enums;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 
 public abstract class CardModel implements Cloneable {
 
@@ -15,7 +17,9 @@ public abstract class CardModel implements Cloneable {
 
     private Enums.CardState state;
 
-    private ImageIcon image;
+    private ImageIcon normalImage;
+
+    private ImageIcon fadedImage;
 
     private ImageIcon facingDownImage;
 
@@ -25,16 +29,20 @@ public abstract class CardModel implements Cloneable {
         this.state = state;
     }
 
-    CardModel(int cardNumber, Enums.Theme type, ImageIcon image, ImageIcon facingDownImage) {
+    CardModel(int cardNumber, Enums.Theme type, ImageIcon normalImage, ImageIcon facingDownImage) {
         this.cardNumber = cardNumber;
         this.type = type;
-        this.image = image;
+        this.normalImage = normalImage;
         this.facingDownImage = facingDownImage;
         state = Enums.CardState.FACING_DOWN;
     }
 
     public int getCardNumber() {
         return cardNumber;
+    }
+
+    public void setCardNumber(int cardNumber) {
+        this.cardNumber = cardNumber;
     }
 
     public Enums.Theme getType() {
@@ -45,11 +53,39 @@ public abstract class CardModel implements Cloneable {
         return state;
     }
 
+    public void setState(Enums.CardState state) {
+        this.state = state;
+    }
+
     public ImageIcon getImage() {
-        return state == Enums.CardState.FACING_DOWN ? facingDownImage : image;
+        ImageIcon img = null;
+        switch (state) {
+            case FACING_DOWN:
+                img = facingDownImage;
+                break;
+            case FACING_UP:
+                img = normalImage;
+                break;
+            case CORRECT:
+                img = fadedImage;
+                break;
+        }
+        return img;
+    }
+
+    public void createFadedImage() {
+        BufferedImage bi = new BufferedImage(
+                normalImage.getIconWidth(),
+                normalImage.getIconHeight(),
+                BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = bi.createGraphics();
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.25f));
+        g.drawImage(normalImage.getImage(), 0, 0, null);
+        fadedImage = new ImageIcon(bi);
     }
 
     public void setCorrect() {
+        createFadedImage();
         state = Enums.CardState.CORRECT;
     }
 
@@ -57,16 +93,8 @@ public abstract class CardModel implements Cloneable {
         return index;
     }
 
-    void setIndex(int index) {
+    public void setIndex(int index) {
         this.index = index;
-    }
-
-    public void setCardNumber(int cardNumber) {
-        this.cardNumber = cardNumber;
-    }
-
-    public void setState(Enums.CardState state) {
-        this.state = state;
     }
 
     public boolean isCorrect() {
@@ -76,7 +104,6 @@ public abstract class CardModel implements Cloneable {
     public boolean isFacingUp() {
         return state.equals(Enums.CardState.FACING_UP);
     }
-
 
     public boolean isFacingDown() {
         return state.equals(Enums.CardState.FACING_DOWN);

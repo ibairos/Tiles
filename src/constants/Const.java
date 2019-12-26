@@ -73,6 +73,9 @@ public class Const {
     public static final int SIZE_X_TURN = 80;
     public static final int SIZE_Y_TURN = 30;
 
+    public static final int SIZE_X_TIMER = 200;
+    public static final int SIZE_Y_TIMER = 40;
+
     // Bomb animation
     public static final int INITIAL_SIZE_BOMB = 20;
     public static final int FINAL_SIZE_BOMB = 250;
@@ -99,10 +102,16 @@ public class Const {
     // High scores
     // Points
     public static final int DEFAULT_POINTS_TILE_OK = 10;
-    public static final int DEFAULT_POINTS_BOMB = -5;
+    public static final int DEFAULT_POINTS_BOMB = -3;
+    public static final int DEFAULT_POINTS_TIMER = -5;
+
+    // Timers
+    public static final double GAME_TURN_TIMER = 15;
+    public static final int REFRESH_TIMER_MILLIS = 50;
 
     // Default numbers
     public static final int UNKNOWN = -1;
+
 
 
 }

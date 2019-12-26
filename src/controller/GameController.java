@@ -1,15 +1,12 @@
 package controller;
 
-import model.BombCardModel;
-import model.CardModel;
-import model.ComputerPlayerModel;
-import model.GameModel;
+import model.card.BombCardModel;
+import model.card.CardModel;
+import model.player.ComputerPlayerModel;
+import model.game.GameModel;
 import util.FileIO;
 import util.SQLite;
-import view.BombIconView;
-import view.CardView;
-import view.ScoreView;
-import view.TurnView;
+import view.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -19,6 +16,7 @@ import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
+import static constants.Commands.GAME_EXIT;
 import static constants.Const.*;
 import static constants.Strings.DEFAULT_FILENAME_TURN;
 import static constants.Strings.DEFAULT_FOLDER_RES;
@@ -39,8 +37,6 @@ public class GameController extends TilesController {
 
     private SQLite sqLite;
 
-    private long startTime;
-
     GameController(GameModel gameModel) throws HeadlessException {
         super(FRAME_TITLE, gameModel.getSizeX(), gameModel.getSizeY());
         this.gameModel = gameModel;
@@ -54,6 +50,7 @@ public class GameController extends TilesController {
         setupJPanel();
         add(jPanel);
         setVisible(true);
+        new Thread(new RefreshThread()).start();
     }
 
     @Override
@@ -63,7 +60,7 @@ public class GameController extends TilesController {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getActionCommand().equals("exit")) {
+        if (e.getActionCommand().equals(GAME_EXIT)) {
             dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
         }
     }
@@ -119,12 +116,15 @@ public class GameController extends TilesController {
 
         upperPanel.add(scoresPanel);
 
-        upperPanel.add(new TurnView(FileIO.readTurnIcon(new File(DEFAULT_FOLDER_RES + DEFAULT_FILENAME_TURN)),
-                gameModel, scoresPanel));
+        TurnView turnView = new TurnView(FileIO.readTurnIcon(new File(DEFAULT_FOLDER_RES + DEFAULT_FILENAME_TURN)),
+                gameModel, scoresPanel);
+        upperPanel.add(turnView);
+        TimerView timerView = new TimerView(gameModel, upperPanel);
+        upperPanel.add(timerView);
 
         JButton exitButton = new JButton("Exit");
         exitButton.setMnemonic(KeyEvent.VK_E);
-        exitButton.setActionCommand("exit");
+        exitButton.setActionCommand(GAME_EXIT);
         exitButton.addActionListener(this);
         exitButton.setBounds(gameModel.getSizeX() - DEFAULT_X_SIZE_EXIT_BUTTON - DEFAULT_SIZE_BORDER,
                 (DEFAULT_Y_SIZE_UPPER - DEFAULT_Y_SIZE_EXIT_BUTTON) / 2,
@@ -162,20 +162,20 @@ public class GameController extends TilesController {
 
     }
 
+    private void cardPicked(int position) {
+        cards.get(position).getCardModel().flip();
+        repaint();
+
+        SwingUtilities.invokeLater(() -> checkCard(cards.get(position).getCardModel()));
+    }
+
     private void checkCard(CardModel cardModel) {
         gameModel.updateComputerCardMap(cards);
         if (cardModel.getClass() == BombCardModel.class) {
             gameModel.modifyScore(DEFAULT_POINTS_BOMB);
-            if (faceUpCards.size() > 0) {
-                faceUpCards.get(0).flip();
-                faceUpCards.clear();
-            }
             cardModel.setCorrect();
             new Thread(bomb).start();
-            gameModel.changeTurn();
-            if (gameModel.isComputersTurn()) {
-                SwingUtilities.invokeLater(this::computersTurn);
-            }
+            bombExploded();
         } else {
             if (faceUpCards.size() == 0) {
                 faceUpCards.add(cardModel);
@@ -185,7 +185,8 @@ public class GameController extends TilesController {
                     cardModel.setCorrect();
                     faceUpCard.setCorrect();
                     gameModel.modifyScore(DEFAULT_POINTS_TILE_OK);
-                    if (gameModel.isGameEnded()) {
+                    gameModel.resetTurn();
+                    if (gameModel.gameFinished()) {
                         endGame();
                     }
                 } else {
@@ -193,8 +194,7 @@ public class GameController extends TilesController {
                     faceUpCard.flip();
                     try {
                         Thread.sleep((long) (gameModel.getGameParams().getCardsUpTime() * 1000));
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                    } catch (InterruptedException ignored) {
                     }
                     gameModel.changeTurn();
                 }
@@ -207,10 +207,50 @@ public class GameController extends TilesController {
         repaint();
     }
 
+    private void bombExploded() {
+        if (faceUpCards.size() > 0) {
+            for (CardModel c : faceUpCards) {
+                c.flip();
+            }
+            faceUpCards.clear();
+        }
+        gameModel.changeTurn();
+
+        if (gameModel.isComputersTurn()) {
+            SwingUtilities.invokeLater(this::computersTurn);
+        }
+    }
+
+    private void timeExceeded() {
+        if (faceUpCards.size() > 0) {
+            for (CardModel c : faceUpCards) {
+                c.flip();
+            }
+            faceUpCards.clear();
+        }
+
+        gameModel.modifyScore(DEFAULT_POINTS_TIMER);
+        try {
+            Thread.sleep((long) (gameModel.getGameParams().getCardsUpTime() * 1000));
+        } catch (InterruptedException ignored) {
+        }
+
+        gameModel.changeTurn();
+
+        if (gameModel.isComputersTurn()) {
+            SwingUtilities.invokeLater(this::computersTurn);
+        }
+    }
+
+    private void computersTurn() {
+        new Thread(new ComputerMoves()).start();
+    }
+
     private void endGame() {
         long endTime = System.currentTimeMillis();
-        float elapsedTime = ((float) (endTime - startTime)) / 1000;
+        long elapsedTime = (long) (((float) (endTime - gameModel.getGameStartTime())) / 1000);
         sqLite.insertHighScores(gameModel, elapsedTime);
+
         JLabel scoreInfo;
         switch (gameModel.getGameParams().getGameMode()) {
             case TWO_PLAYERS:
@@ -234,19 +274,6 @@ public class GameController extends TilesController {
         dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
     }
 
-    private void computersTurn() {
-        new Thread(new ComputerMoves()).start();
-    }
-
-    private void cardPicked(int position) {
-        cards.get(position).getCardModel().flip();
-        repaint();
-
-        SwingUtilities.invokeLater(() -> {
-            checkCard(cards.get(position).getCardModel());
-        });
-    }
-
     private class CardClickListener implements MouseListener {
 
         private int position;
@@ -257,10 +284,9 @@ public class GameController extends TilesController {
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (startTime == 0) {
-                startTime = System.currentTimeMillis();
+            if (!gameModel.gameStarted()) {
+                gameModel.startGame();
             }
-
             if (!gameModel.isComputersTurn() && !cards.get(position).getCardModel().isFacingUp()) {
                 cardPicked(position);
             }
@@ -320,4 +346,23 @@ public class GameController extends TilesController {
         }
     }
 
+    private class RefreshThread implements Runnable {
+        @Override
+        public void run() {
+            int lastExceededTurnCounter = -1;
+            while (!gameModel.gameFinished()) {
+                gameModel.updateTurnRemainingTime();
+                repaint();
+                if (gameModel.getTurnRemainingTime() < 0 && gameModel.getTurnCounter() != lastExceededTurnCounter) {
+                    lastExceededTurnCounter = gameModel.getTurnCounter();
+                    timeExceeded();
+                }
+                try {
+                    Thread.sleep(REFRESH_TIMER_MILLIS);
+                } catch (InterruptedException ignored) {
+
+                }
+            }
+        }
+    }
 }

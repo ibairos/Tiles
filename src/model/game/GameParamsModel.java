@@ -1,4 +1,4 @@
-package model;
+package model.game;
 
 import constants.Enums;
 
@@ -21,7 +21,7 @@ public class GameParamsModel {
         this.difficulty = difficulty;
         this.cardsUpTime = cardsUpTime;
         this.gameMode = gameMode;
-        numberOfBombCards = (int) ((double)numberOfCards * (((double)difficulty - 1) / DEFAULT_MAX_DIFFICULTY));
+        numberOfBombCards = (int) ((double) (numberOfCards / 2) * (((double) difficulty) / DEFAULT_MAX_DIFFICULTY));
         numberOfNormalCards = numberOfCards - numberOfBombCards;
     }
 

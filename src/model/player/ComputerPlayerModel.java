@@ -1,5 +1,7 @@
-package model;
+package model.player;
 
+import model.game.GameParamsModel;
+import model.card.CustomCardModel;
 import view.CardView;
 
 import java.util.ArrayList;
@@ -12,9 +14,9 @@ public class ComputerPlayerModel extends PlayerModel {
     private static final int[] UNKNOWN_PICK = {-1, -1};
 
     private GameParamsModel gameParams;
-    private ArrayList<UnknownCardModel> cardMap;
+    private ArrayList<CustomCardModel> cardMap;
 
-    ComputerPlayerModel(String playerName, GameParamsModel gameParams) {
+    public ComputerPlayerModel(String playerName, GameParamsModel gameParams) {
         super(playerName);
         this.gameParams = gameParams;
         cardMap = new ArrayList<>();
@@ -51,11 +53,11 @@ public class ComputerPlayerModel extends PlayerModel {
     }
 
     private boolean isRandomPick() {
-        double randomPickProbability = 1 - ((double) gameParams.getDifficulty() - 1) / DEFAULT_MAX_DIFFICULTY;
+        double randomPickProbability = 1 - ((double) gameParams.getDifficulty()) / DEFAULT_MAX_DIFFICULTY;
         return Math.random() < randomPickProbability;
     }
 
-    void updateCardMap(ArrayList<CardView> gameCards) {
+    public void updateCardMap(ArrayList<CardView> gameCards) {
         if (cardMap.size() != 0) {
             for (int i = 0; i < gameCards.size(); i++) {
                 cardMap.get(i).setState(gameCards.get(i).getCardModel().getState());
@@ -68,7 +70,7 @@ public class ComputerPlayerModel extends PlayerModel {
             for (CardView view : gameCards) {
                 int cardNumber = !view.getCardModel().isFacingDown()
                         ? view.getCardModel().getCardNumber() : UNKNOWN;
-                cardMap.add(new UnknownCardModel(cardNumber, view.getCardModel().getIndex(),
+                cardMap.add(new CustomCardModel(cardNumber, view.getCardModel().getIndex(),
                         view.getCardModel().getState()));
             }
         }

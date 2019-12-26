@@ -1,31 +1,27 @@
 package controller;
 
 import constants.Enums;
-import constants.Strings;
-import model.CardModel;
-import model.GameModel;
-import model.GameParamsModel;
-import model.HighScoreModel;
+import model.card.CardModel;
+import model.game.GameModel;
+import model.game.GameParamsModel;
+import model.game.HighScoreModel;
 import util.FileIO;
 import util.SQLite;
 import view.HighScoresView;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Objects;
+import java.io.FileNotFoundException;
+import java.util.*;
 
+import static constants.Commands.*;
 import static constants.Const.*;
-import static constants.Strings.DEFAULT_FILENAME_BOMB_CARD;
-import static constants.Strings.DEFAULT_FOLDER_RES;
+import static constants.Strings.*;
 import static util.FileIO.FILE_CHOOSER_FILTER;
 import static util.FileIO.IMG_FILTER;
 
@@ -39,6 +35,7 @@ public class MenuController extends TilesController {
     private JSpinner sizeYSpinner;
     private JSlider difficultySlider;
     private JSlider cardsUpTimeSlider;
+    private JButton loadThemeButton;
     private JComboBox<String> themesComboBox;
     private ButtonGroup opponentRadioGroup;
 
@@ -73,19 +70,22 @@ public class MenuController extends TilesController {
     @Override
     public void actionPerformed(ActionEvent e) {
         switch (e.getActionCommand()) {
-            case "showAboutPage":
+            case MENU_SHOW_ABOUT_PAGE:
                 showAboutPage();
                 break;
-            case "loadTheme":
+            case MENU_LOAD_THEME:
                 loadTheme();
                 break;
-            case "showHighScores":
+            case MENU_REMOVE_THEME:
+                removeTheme();
+                break;
+            case MENU_SHOW_HIGH_SCORES:
                 showHighScores();
                 break;
-            case "start":
+            case MENU_START:
                 startGame();
                 break;
-            case "exit":
+            case MENU_EXIT:
                 dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
                 break;
             default:
@@ -110,7 +110,7 @@ public class MenuController extends TilesController {
         aboutButton.setMnemonic(KeyEvent.VK_R);
         aboutButton.setBorder(new EmptyBorder(DEFAULT_SIZE_BORDER, DEFAULT_SIZE_BORDER, DEFAULT_SIZE_BORDER,
                 DEFAULT_SIZE_BORDER));
-        aboutButton.setActionCommand("showAboutPage");
+        aboutButton.setActionCommand(MENU_SHOW_ABOUT_PAGE);
         aboutButton.addActionListener(this);
         jPanel.add(aboutButton);
 
@@ -193,18 +193,18 @@ public class MenuController extends TilesController {
         opponentPanel.add(selectOpponentLabel);
 
         JRadioButton onePlayerButton = new JRadioButton("One player");
-        onePlayerButton.setActionCommand("onePlayer");
+        onePlayerButton.setActionCommand(MENU_ONE_PLAYER);
         onePlayerButton.setMnemonic(KeyEvent.VK_O);
         onePlayerButton.setSelected(true);
         opponentPanel.add(onePlayerButton);
 
         JRadioButton twoPlayersButton = new JRadioButton("Two players");
-        twoPlayersButton.setActionCommand("twoPlayers");
+        twoPlayersButton.setActionCommand(MENU_TWO_PLAYERS);
         twoPlayersButton.setMnemonic(KeyEvent.VK_T);
         opponentPanel.add(twoPlayersButton);
 
         JRadioButton computerButton = new JRadioButton("Computer");
-        computerButton.setActionCommand("computer");
+        computerButton.setActionCommand(MENU_COMPUTER);
         computerButton.setMnemonic(KeyEvent.VK_C);
         opponentPanel.add(computerButton);
 
@@ -221,11 +221,11 @@ public class MenuController extends TilesController {
                 opponentPanel.getY() + opponentPanel.getHeight() + DEFAULT_RELATIVE_POS_Y_LOWER_BUTTONS,
                 DEFAULT_X_SIZE, DEFAULT_Y_SIZE_LOWER_BUTTONS);
 
-        JButton loadThemeButton = new JButton("Load Theme");
+        loadThemeButton = new JButton("Load Theme");
         loadThemeButton.setMnemonic(KeyEvent.VK_T);
         loadThemeButton.setBorder(new EmptyBorder(DEFAULT_SIZE_BORDER, DEFAULT_SIZE_BORDER, DEFAULT_SIZE_BORDER,
                 DEFAULT_SIZE_BORDER));
-        loadThemeButton.setActionCommand("loadTheme");
+        loadThemeButton.setActionCommand(MENU_LOAD_THEME);
         loadThemeButton.addActionListener(this);
         lowerButtons.add(loadThemeButton);
 
@@ -233,7 +233,7 @@ public class MenuController extends TilesController {
         highScoresButton.setMnemonic(KeyEvent.VK_H);
         highScoresButton.setBorder(new EmptyBorder(DEFAULT_SIZE_BORDER, DEFAULT_SIZE_BORDER, DEFAULT_SIZE_BORDER,
                 DEFAULT_SIZE_BORDER));
-        highScoresButton.setActionCommand("showHighScores");
+        highScoresButton.setActionCommand(MENU_SHOW_HIGH_SCORES);
         highScoresButton.addActionListener(this);
         lowerButtons.add(highScoresButton);
 
@@ -241,7 +241,7 @@ public class MenuController extends TilesController {
         startButton.setMnemonic(KeyEvent.VK_S);
         startButton.setBorder(new EmptyBorder(DEFAULT_SIZE_BORDER, DEFAULT_SIZE_BORDER, DEFAULT_SIZE_BORDER,
                 DEFAULT_SIZE_BORDER));
-        startButton.setActionCommand("start");
+        startButton.setActionCommand(MENU_START);
         startButton.addActionListener(this);
         lowerButtons.add(startButton);
 
@@ -249,7 +249,7 @@ public class MenuController extends TilesController {
         exitButton.setMnemonic(KeyEvent.VK_E);
         exitButton.setBorder(new EmptyBorder(DEFAULT_SIZE_BORDER, DEFAULT_SIZE_BORDER, DEFAULT_SIZE_BORDER,
                 DEFAULT_SIZE_BORDER));
-        exitButton.setActionCommand("exit");
+        exitButton.setActionCommand(MENU_EXIT);
         exitButton.addActionListener(this);
         lowerButtons.add(exitButton);
 
@@ -260,7 +260,13 @@ public class MenuController extends TilesController {
     private void showAboutPage() {
         JEditorPane aboutText = new JEditorPane();
         aboutText.setContentType("text/html");
-        aboutText.setText(Strings.ABOUT_PAGE_STRING_HTML);
+        String content = null;
+        try {
+            content =
+                    new Scanner(new File(DEFAULT_FOLDER_RES + DEFAULT_FILENAME_ABOUT_PAGE)).useDelimiter("\\Z").next();
+        } catch (FileNotFoundException ignored) {
+        }
+        aboutText.setText(content);
         aboutText.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(aboutText);
         scrollPane.setPreferredSize(new Dimension(DEFAULT_X_SIZE_ABOUT_PAGE, DEFAULT_Y_SIZE_ABOUT_PAGE));
@@ -283,10 +289,10 @@ public class MenuController extends TilesController {
                 Enums.Theme.valueOf(((String) Objects.requireNonNull(themesComboBox.getSelectedItem())).toUpperCase());
         Enums.GameMode gameMode;
         switch (opponentRadioGroup.getSelection().getActionCommand()) {
-            case "twoPlayers":
+            case MENU_TWO_PLAYERS:
                 gameMode = Enums.GameMode.TWO_PLAYERS;
                 break;
-            case "computer":
+            case MENU_COMPUTER:
                 gameMode = Enums.GameMode.COMPUTER;
                 break;
             default:
@@ -336,7 +342,9 @@ public class MenuController extends TilesController {
 
             if (cards.size() >= 20) {
                 themesComboBox.setSelectedIndex(themesComboBox.getItemCount() - 1);
-                //themesComboBox.setEnabled(false);
+                themesComboBox.setEnabled(false);
+                loadThemeButton.setActionCommand(MENU_REMOVE_THEME);
+                loadThemeButton.setText("Remove Theme");
                 customCards = cards;
                 JOptionPane.showMessageDialog(this,
                         "Theme loaded successfully.");
@@ -345,6 +353,16 @@ public class MenuController extends TilesController {
                         "The number of image files in the folder has to be greater than 20.");
             }
         }
+    }
+
+    private void removeTheme() {
+        themesComboBox.setSelectedIndex(0);
+        themesComboBox.setEnabled(true);
+        customCards = null;
+        loadThemeButton.setActionCommand(MENU_LOAD_THEME);
+        loadThemeButton.setText("Load Theme");
+        JOptionPane.showMessageDialog(this,
+                "Theme removed successfully.");
     }
 
 }

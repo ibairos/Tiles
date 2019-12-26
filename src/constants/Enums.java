@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class Enums {
 
     public enum CardState {
-        FACING_UP, FACING_DOWN, CORRECT;
+        FACING_UP, FACING_DOWN, CORRECT
     }
 
     public enum Turn {
@@ -25,7 +25,11 @@ public class Enums {
     }
 
     public enum GameMode {
-        ONE_PLAYER, TWO_PLAYERS, COMPUTER;
+        ONE_PLAYER, TWO_PLAYERS, COMPUTER
+    }
+
+    public enum GameState {
+        NOT_STARTED, STARTED, FINISHED
     }
 
 }

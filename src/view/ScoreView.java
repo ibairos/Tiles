@@ -1,8 +1,7 @@
 package view;
 
 import constants.Enums;
-import model.GameModel;
-import constants.Const;
+import model.game.GameModel;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

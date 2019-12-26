@@ -1,9 +1,8 @@
 package util;
 
-import constants.Const;
 import constants.Enums;
-import model.GameModel;
-import model.HighScoreModel;
+import model.game.GameModel;
+import model.game.HighScoreModel;
 
 import java.sql.*;
 import java.util.ArrayList;

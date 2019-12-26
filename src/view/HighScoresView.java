@@ -1,7 +1,7 @@
 package view;
 
 import constants.Enums;
-import model.HighScoreModel;
+import model.game.HighScoreModel;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,0 +1,132 @@
+
+<h1>Tiles Rules <span style="font-size: medium">by Ibai Ros Iturgaiz</span></h1>
+
+<h2>Overview</h2>
+<p>
+    Welcome to Tiles! In this game, the objective is to match as many tiles as possible with their equals, trying to do
+    it in the fastest way possible.
+</p>
+
+<h2>Game Rules</h2>
+<li>
+    When your turn comes, you have to pick two matching tiles from the board. Be careful because there is a <span
+        style="font-weight: bold">time limit</span>,
+    and if you go over it, not only will you lose your turn, but you will also lose points!
+</li>
+<li>
+    If you find two matching tiles, you will get points and another turn. Alternatively, if you do not pick the correct
+    tiles, it will be your opponents' turn.
+</li>
+<li>
+    Be careful with <span style="font-weight: bold">bombs</span>! If you run into one, not only will you lose your turn,
+    but you will also lose some points too.
+</li>
+
+<h2>Game Options</h2>
+<p>
+    The game lets you pick among many options, making the experience highly <span
+        style="font-weight: bold">customizable</span>. Among these, we have the following:
+</p>
+<h3>Columns and rows</h3>
+<p>
+    Numbers of rows and columns the game board. The resulting number of cards has to be even, for simplicity.
+</p>
+<p>
+    The minimum and maximum columns are 3 and 9, respectively. For rows, the values are 2 and 5.
+    and 5x9.
+</p>
+
+<h3>Difficulty</h3>
+<p>
+    The player will be able to choose among 5 levels of difficulty. The difficulty level will be proportional to various
+    parameters, among which are:
+<li>The points received for each matching tile.</li>
+<li>The points subtracted for each exploded bomb.</li>
+<li>The points subtracted each time the turn time is exceeded.</li>
+<li>The intelligence of the computer (if the game is played against the computer).</li>
+</p>
+
+<h3>Time cards stay up</h3>
+<p>
+    The player will be able to choose the time the cards stay up each time a pair is selected and thus no other card can
+    be selected, even when the pair is incorrect.
+</p>
+
+<h3>Theme</h3>
+<p>
+    The player will be able to choose among 3 different preloaded themes (movies, tv shows and music), or import a
+    custom one if the player desires.
+</p>
+<p>
+    For that, the user must select the Load Theme button and select a folder with at least 20 image files (the game will
+    only load 20). Once the theme is loaded, the player can play with the selected theme. Warning: the images will be
+    shown with a 11:16 (vertical) aspect ratio.
+</p>
+
+<h3>Opponent</h3>
+<p>
+    The player will be able to choose among 3 different game modes:
+<li><span style="font-weight: bold;">One Player</span>: The game will only have one player, and thus the objective will
+    be to flip all the tiles as quickly as possible.
+</li>
+<li><span style="font-weight: bold;">Two Players</span>: The game will have two players that will play against each
+    other with alternating turns. The objective will be to achieve a greater score than the opposing player.
+</li>
+<li><span style="font-weight: bold;">Computer</span>: The game will have two players, the user and the computer itself.
+    As the difficulty level is increased, so will the intelligence of the computer, (the randomness of its choices will
+    decrease).
+</li>
+</p>
+
+<h3>Scoring system</h3>
+<p>
+    The scoring system of this game, as we have mentioned above, will depend proportionally on the level of difficulty
+    chosen. The scores will have some base values, used in the first level of difficulty, which will increase with the
+    level.
+</p>
+<p>The parameters depending on the difficulty are explained in the table below:</p>
+
+<table border="1">
+    <tr>
+        <th>Difficulty</th>
+        <th>Points if correct</th>
+        <th>Points if bomb</th>
+        <th>Points if timer exceeded</th>
+        <th>Prob. of random move by computer</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>10</td>
+        <td>-3</td>
+        <td>-5</td>
+        <td>80%</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>20</td>
+        <td>-6</td>
+        <td>-10</td>
+        <td>60%</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>30</td>
+        <td>-9</td>
+        <td>-15</td>
+        <td>40%</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>40</td>
+        <td>-12</td>
+        <td>-20</td>
+        <td>20%</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>50</td>
+        <td>-15</td>
+        <td>-25</td>
+        <td>0% (deterministic)</td>
+    </tr>
+</table>

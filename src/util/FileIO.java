@@ -2,9 +2,9 @@ package util;
 
 import constants.Enums;
 import constants.Strings;
-import model.BombCardModel;
-import model.CardModel;
-import model.NormalCardModel;
+import model.card.BombCardModel;
+import model.card.CardModel;
+import model.card.NormalCardModel;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;

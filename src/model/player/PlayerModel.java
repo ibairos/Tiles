@@ -1,4 +1,4 @@
-package model;
+package model.player;
 
 public abstract class PlayerModel {
 
@@ -19,7 +19,7 @@ public abstract class PlayerModel {
         return score;
     }
 
-    void setScore(int score) {
+    public void setScore(int score) {
         this.score = Math.max(score, 0);
     }
 
